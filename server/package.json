@@ -1,0 +1,23 @@
+{
+  "name": "realtime.recurse.com",
+  "version": "1.0.0",
+  "description": "Realtime display of what people are working on in 455 Broadway",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/strugee/realtime.recurse.com.git"
+  },
+  "author": "Alex Jordan <alex@strugee.net>",
+  "license": "AGPL-3.0+",
+  "bugs": {
+    "url": "https://github.com/strugee/realtime.recurse.com/issues"
+  },
+  "homepage": "https://github.com/strugee/realtime.recurse.com#readme",
+  "dependencies": {
+    "compression": "^1.6.2",
+    "express": "^4.14.1"
+  }
+}
