@@ -1,6 +1,6 @@
 /*
 
-Copyright 2016 Alex Jordan <alex@strugee.net>.
+Copyright 2017 Alex Jordan <alex@strugee.net>.
 
 This file is part of realtime.recurse.com.
 
@@ -20,25 +20,42 @@ License along with realtime.recurse.com. If not, see
 
 */
 
-var fs = require('fs');
-var path = require('path');
-var express = require('express');
-var compression= require('compression');
+const fs = require('fs'),
+      path = require('path'),
+      express = require('express'),
+      compression= require('compression'),
+      bodyParser = require('body-parser');
 
 var app = express();
 
 app.use(compression());
+app.use(bodyParser.json());
+
+var cache = new Map();
 
 app.get('/api/people', function(req, res, next) {
-	
+	res.write('[');
+	for (const key of cache.keys()) {
+		res.write(`"#{key}",`);
+	}
+	res.end(']');
 });
 
 app.get('/api/people/:name', function(req, res, next) {
-	
+	res.json(cache.get(req.params.name));
 });
 
-app.post('/api/submit', function(req, res, next) {
-	
+app.post('/api/people/:name', function(req, res, next) {
+	if (!req.body.action) {
+		res.status(400);
+		res.end('Missing `action` parameter');
+		return;
+	}
+
+	cache.set(req.params.name, req.body);
+
+	res.status(204);
+	res.end();
 });
 
 module.exports = app;
