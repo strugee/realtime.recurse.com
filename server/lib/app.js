@@ -20,6 +20,8 @@ License along with realtime.recurse.com. If not, see
 
 */
 
+'use strict';
+
 const fs = require('fs'),
       path = require('path'),
       express = require('express'),
@@ -35,9 +37,14 @@ var cache = new Map();
 
 app.get('/api/people', function(req, res, next) {
 	res.write('[');
+
+	let count = 0, target = cache.size - 1;
 	for (const key of cache.keys()) {
-		res.write(`"#{key}",`);
+		res.write(`"${key}"`);
+		if (count !== target) res.write(',');
+		count++;
 	}
+
 	res.end(']');
 });
 
