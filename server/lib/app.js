@@ -61,6 +61,10 @@ app.post('/api/people/:name', function(req, res, next) {
 
 	cache.set(req.params.name, req.body);
 
+	setTimeout(() => {
+		cache.delete(req.params.name);
+	}, 1000 * 60 * 10); // 10 minutes
+
 	res.status(204);
 	res.end();
 });
