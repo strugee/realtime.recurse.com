@@ -26,14 +26,27 @@ const fs = require('fs'),
       path = require('path'),
       express = require('express'),
       compression= require('compression'),
-      bodyParser = require('body-parser');
+      bodyParser = require('body-parser'),
+      redis = require('redis');
 
-var app = express();
+// Expiry time is 10 minutes
+const expiryTime = 1000 * 60 * 10;
+
+var app = express(),
+    db = redis.createClient();
+
+db.on('error', err => { throw err; });
 
 app.use(compression());
 app.use(bodyParser.json());
 
-var cache = new Map();
+// Cache sets automatically propogate to Redis
+var cache = new Proxy(new Map(), {
+	apply: function(target, thisArg, argumentsList) {
+		// Do the default behavior but kick off a Redis command
+		debugger;
+	}
+});
 
 app.get('/api/people', function(req, res, next) {
 	res.write('[');
@@ -63,7 +76,7 @@ app.post('/api/people/:name', function(req, res, next) {
 
 	setTimeout(() => {
 		cache.delete(req.params.name);
-	}, 1000 * 60 * 10); // 10 minutes
+	}, expiryTime);
 
 	res.status(204);
 	res.end();
