@@ -41,12 +41,8 @@ app.use(compression());
 app.use(bodyParser.json());
 
 // Cache sets automatically propogate to Redis
-var cache = new Proxy(new Map(), {
-	apply: function(target, thisArg, argumentsList) {
-		// Do the default behavior but kick off a Redis command
-		debugger;
-	}
-});
+var cache = new Map();
+// TODO
 
 app.get('/api/people', function(req, res, next) {
 	res.write('[');
