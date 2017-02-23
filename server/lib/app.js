@@ -30,19 +30,32 @@ const fs = require('fs'),
       redis = require('redis');
 
 // Expiry time is 10 minutes
-const expiryTime = 1000 * 60 * 10;
+const expiryTime = 1000 * 60 * 1;
 
 var app = express(),
     db = redis.createClient();
 
 db.on('error', err => { throw err; });
 
+app.set('view engine', 'pug');
+
 app.use(compression());
 app.use(bodyParser.json());
+
+app.use(express.static('public'));
 
 // Cache sets automatically propogate to Redis
 var cache = new Map();
 // TODO
+
+app.get('/', function(req, res, next) {
+	// TODO: figure out how to iterate over a Map in Pug
+	var objCache = Object.create(null);
+	cache.forEach((value, key) => {
+		objCache[key] = value;
+	});
+	res.render('index', {cache: objCache});
+});
 
 app.get('/api/people', function(req, res, next) {
 	res.write('[');
