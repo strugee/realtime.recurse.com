@@ -19,7 +19,15 @@ class ProjectEventHandler(FileSystemEventHandler):
             repo_url = subprocess.check_output(['git', 'remote', 'get-url', 'origin'], universal_newlines=True)
         except subprocess.CalledProcessError:
             print('Failed to get git repository information; probably this isn\'t a git project.')
-            return
+            print('Trying hg.')
+            try:
+                # TODO: probably this can be done natively in Python
+                repo_url = subprocess.check_output(['hg', 'path', 'default'], universal_newlines=True)
+            except CalledProcessError:
+                print('Failed to get hg repository information; probably this isn\'t an hg project.')
+                print('No more version control systems to try. Bailing.')
+                chdir(cwd)
+                return
         chdir(cwd)
 
         payload = { 'action': 'edit', 'url': repo_url }
