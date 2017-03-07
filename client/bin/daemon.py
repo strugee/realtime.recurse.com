@@ -18,8 +18,9 @@ class ProjectEventHandler(FileSystemEventHandler):
         repo_url = subprocess.check_output(['git', 'remote', 'get-url', 'origin'], universal_newlines=True)
         chdir(cwd)
 
-        payload = { 'action': 'edit', 'repo_url': repo_url }
-        r = requests.post('http://localhost:8000', json=payload)
+        payload = { 'action': 'edit', 'url': repo_url }
+        r = requests.post('http://localhost:8000/api/people/aj', json=payload)
+        print(r.status_code, r.reason)
 
 print('realtime.recurse.com client starting up...')
 
