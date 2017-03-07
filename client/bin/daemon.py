@@ -36,7 +36,7 @@ class ProjectEventHandler(FileSystemEventHandler):
 
         payload = { 'action': 'edit', 'url': repo_url }
         r = requests.post('http://localhost:8000/api/people/aj', json=payload)
-        print(r.status_code, r.reason)
+        print('Received {0} {1} from server.'.format(r.status_code, r.reason))
 
 print('realtime.recurse.com client starting up...')
 
