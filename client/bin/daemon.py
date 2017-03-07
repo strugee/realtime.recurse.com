@@ -1,14 +1,30 @@
 #!/usr/bin/python
 
 import time
+import sched
 import subprocess
 from os import path, chdir, getcwd
 import requests
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileModifiedEvent
 
+# 5 minutes
+#resubmitTime = 60 * 5
+resubmitTime = 5
+
+lastUrl = None
+lastWasPeriodic = False
+
+def submit_data(repo_url, action='edit'):
+    payload = { 'action': action, 'url': repo_url }
+    r = requests.post('http://localhost:8000/api/people/aj', json=payload)
+    print('Received {0} {1} from server.'.format(r.status_code, r.reason))
+
 class ProjectEventHandler(FileSystemEventHandler):
     def on_any_event(self, event):
+        global lastWasPeriodic
+        global lastUrl
+
         if not isinstance(event, FileModifiedEvent):
             # TODO expand this
             print('Incoming event is not a file modification; ignoring')
@@ -34,9 +50,9 @@ class ProjectEventHandler(FileSystemEventHandler):
                 return
         chdir(cwd)
 
-        payload = { 'action': 'edit', 'url': repo_url }
-        r = requests.post('http://localhost:8000/api/people/aj', json=payload)
-        print('Received {0} {1} from server.'.format(r.status_code, r.reason))
+        lastUrl = repo_url
+        lastWasPeriodic = False
+        submit_data(repo_url)
 
 print('realtime.recurse.com client starting up...')
 
@@ -46,6 +62,19 @@ observer.schedule(event_handler, path='.', recursive=True)
 observer.start()
 
 print('Listening for filesystem events.')
+
+periodicSubmitter = sched.scheduler(time.time, time.sleep)
+
+def submit_periodic(sc):
+    global lastWasPeriodic
+    if lastUrl and not lastWasPeriodic:
+        print('Submitting a periodic update.')
+        lastWasPeriodic = True
+        submit_data(lastUrl, action='edit')
+    periodicSubmitter.enter(resubmitTime, 1, submit_periodic, (sc,))
+
+periodicSubmitter.enter(resubmitTime, 1, submit_periodic, (periodicSubmitter ,))
+periodicSubmitter.run()
 
 try:
     while True:
