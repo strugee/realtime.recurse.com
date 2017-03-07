@@ -11,13 +11,18 @@ from watchdog.events import FileSystemEventHandler, FileModifiedEvent
 # 5 minutes
 #resubmitTime = 60 * 5
 resubmitTime = 5
+version = '0.1.0'
 
 lastUrl = None
 lastWasPeriodic = False
 
 def submit_data(repo_url, action='edit'):
+    headers = requests.utils.default_headers()
+    headers.update({
+        'User-Agent': requests.utils.default_user_agent() + ' rcrealtime/' + version
+    })
     payload = { 'action': action, 'url': repo_url }
-    r = requests.post('http://localhost:8000/api/people/aj', json=payload)
+    r = requests.post('http://localhost:8000/api/people/aj', headers=headers, json=payload)
     print('Received {0} {1} from server.'.format(r.status_code, r.reason))
 
 class ProjectEventHandler(FileSystemEventHandler):
