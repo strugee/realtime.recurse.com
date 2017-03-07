@@ -5,10 +5,15 @@ import subprocess
 from os import path, chdir, getcwd
 import requests
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import FileSystemEventHandler, FileModifiedEvent
 
 class ProjectEventHandler(FileSystemEventHandler):
     def on_any_event(self, event):
+        if not isinstance(event, FileModifiedEvent):
+            # TODO expand this
+            print('Incoming event is not a file modification; ignoring')
+            return
+
         print('Dispatching request.')
         # Find the git root
         # TODO this could be made more efficient with popen
