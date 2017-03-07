@@ -15,7 +15,6 @@ class ProjectEventHandler(FileSystemEventHandler):
         cwd = getcwd()
         chdir(path.dirname(event.src_path))
         try:
-            repo_root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], universal_newlines=True)
             repo_url = subprocess.check_output(['git', 'remote', 'get-url', 'origin'], universal_newlines=True)
         except subprocess.CalledProcessError:
             print('Failed to get git repository information; probably this isn\'t a git project.')
