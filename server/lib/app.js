@@ -27,7 +27,10 @@ const fs = require('fs'),
       express = require('express'),
       compression= require('compression'),
       bodyParser = require('body-parser'),
-      redis = require('redis');
+      redis = require('redis'),
+      semver = require('semver');
+
+const recommendedVersion = '0.1.0';
 
 // Expiry time is 10 minutes
 const expiryTime = 1000 * 60 * 1;
@@ -43,6 +46,20 @@ app.use(compression());
 app.use(bodyParser.json());
 
 app.use(express.static('public'));
+
+// Update information
+app.use(function(req, res, next) {
+	req.headers['user-agent'].split(' ').map(el => {
+		let component = el.split('/');
+
+		if (component[0] === 'rcrealtime'
+		    && semver.lt(component[1], recommendedVersion)) {
+			res.set('X-Upgrade-Required', recommendedVersion);
+		}
+	});
+
+	next();
+});
 
 // Cache sets automatically propogate to Redis
 var cache = new Map();
@@ -89,6 +106,23 @@ app.post('/api/people/:name', function(req, res, next) {
 
 	res.status(204);
 	res.end();
+});
+
+app.get('/api/versions/:major', function(req, res, next) {
+	if (req.params.major !== '0') {
+		next();
+		return;
+	}
+
+	// TODO make this only offer semver-compatible upgrades
+	res.json({
+		recommended: {
+			version: recommendedVersion,
+			download: 'TODO',
+			signature: 'TODO'
+		},
+		prerelease: null
+	});
 });
 
 module.exports = app;

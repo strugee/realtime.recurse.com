@@ -21,9 +21,13 @@ def submit_data(repo_url, action='edit'):
     headers.update({
         'User-Agent': requests.utils.default_user_agent() + ' rcrealtime/' + version
     })
+
     payload = { 'action': action, 'url': repo_url }
     r = requests.post('http://localhost:8000/api/people/aj', headers=headers, json=payload)
     print('Received {0} {1} from server.'.format(r.status_code, r.reason))
+
+    if r.headers.get('X-Upgrade-Required'):
+        print('Response included notification about version ' + r.headers['X-Upgrade-Required'])
 
 class ProjectEventHandler(FileSystemEventHandler):
     def on_any_event(self, event):
