@@ -33,7 +33,7 @@ const fs = require('fs'),
 const recommendedVersion = '0.1.0';
 
 // Expiry time is 10 minutes
-const expiryTime = 1000 * 60 * 1;
+const expiryTime = 1000 * 60 * 10;
 
 var app = express(),
     db = redis.createClient();
