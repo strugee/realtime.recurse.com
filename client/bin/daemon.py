@@ -1,10 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import time
 import sched
 import subprocess
+import tempfile
+import gnupg
 from os import path, chdir, getcwd
 import requests
+import urllib
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileModifiedEvent
 
@@ -12,14 +15,39 @@ from watchdog.events import FileSystemEventHandler, FileModifiedEvent
 #resubmitTime = 60 * 5
 resubmitTime = 5
 version = '0.1.0'
+# TODO make this report the Python version
+userAgent = requests.utils.default_user_agent() + ' rcrealtime/' + version
 
 lastUrl = None
 lastWasPeriodic = False
 
+def perform_upgrade(url, signature_url):
+    tmpdir = tempfile.TemporaryDirectory(prefix='rcrealtime')
+    pkgfile = path.join(tmpdir.name, 'package.tar.xz')
+    sigfile = path.join(tmpdir.name, 'package.tar.xz.sig')
+    # TODO make this respect the user agent
+    # TODO URLopener is deprecated
+    package = urllib.request.URLopener()
+    package.retrieve(url, pkgfile)
+    signature = urllib.request.URLopener()
+    signature.retrieve(url, sigfile)
+
+    # TODO ship the keyring in the package
+    gpg = gnupg.GPG(gnupghome=path.join(tmpdir.name, 'gpg_home'))
+    key_import = gpg.recv_keys('hkp://pool.gnupg.org', 'C46D 8E7A 3F13 AD1C 8EC6  7848 43BF 769C 4ACA 8B96')
+    pkgfile_obj = open(pkgfile, 'rb')
+    sigfile_obj = open(sigfile, 'rb')
+    print(type(pkgfile_obj))
+    verification = gpg.verify_file(sigfile_obj, pkgfile_obj)
+
+    if verification.trust_level is None:
+        print('Aborted update due to mismatched signature.')
+        # TODO notify user
+
 def submit_data(repo_url, action='edit'):
     headers = requests.utils.default_headers()
     headers.update({
-        'User-Agent': requests.utils.default_user_agent() + ' rcrealtime/' + version
+        'User-Agent': userAgent
     })
 
     payload = { 'action': action, 'url': repo_url }
