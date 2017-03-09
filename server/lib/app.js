@@ -118,8 +118,8 @@ app.get('/api/versions/:major', function(req, res, next) {
 	res.json({
 		recommended: {
 			version: recommendedVersion,
-			download: 'TODO',
-			signature: 'TODO'
+			download: 'http://localhost:8080/update-bundle.tar.xz',
+			signature: 'http://localhost:8080/update-bundle.tar.xz.sig'
 		},
 		prerelease: null
 	});

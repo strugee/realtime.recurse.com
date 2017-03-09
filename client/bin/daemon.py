@@ -22,6 +22,7 @@ lastUrl = None
 lastWasPeriodic = False
 
 def perform_upgrade(url, signature_url):
+    print('Performing upgrade.')
     tmpdir = tempfile.TemporaryDirectory(prefix='rcrealtime')
     pkgfile = path.join(tmpdir.name, 'package.tar.xz')
     sigfile = path.join(tmpdir.name, 'package.tar.xz.sig')
@@ -30,19 +31,21 @@ def perform_upgrade(url, signature_url):
     package = urllib.request.URLopener()
     package.retrieve(url, pkgfile)
     signature = urllib.request.URLopener()
-    signature.retrieve(url, sigfile)
+    signature.retrieve(signature_url, sigfile)
 
     # TODO ship the keyring in the package
     gpg = gnupg.GPG(gnupghome=path.join(tmpdir.name, 'gpg_home'))
-    key_import = gpg.recv_keys('hkp://pool.gnupg.org', 'C46D 8E7A 3F13 AD1C 8EC6  7848 43BF 769C 4ACA 8B96')
-    pkgfile_obj = open(pkgfile, 'rb')
+    key_import = gpg.recv_keys('hkp://pool.sks-keyservers.net', 'C46D8E7A3F13AD1C8EC6784843BF769C4ACA8B96')
     sigfile_obj = open(sigfile, 'rb')
-    print(type(pkgfile_obj))
-    verification = gpg.verify_file(sigfile_obj, pkgfile_obj)
+    verification = gpg.verify_file(sigfile_obj, pkgfile)
 
     if verification.trust_level is None:
         print('Aborted update due to mismatched signature.')
         # TODO notify user
+
+    print('Downloaded and verified update bundle.')
+    # TODO unpack and stuff
+    print('Upgrade complete.')
 
 def submit_data(repo_url, action='edit'):
     headers = requests.utils.default_headers()
@@ -55,7 +58,10 @@ def submit_data(repo_url, action='edit'):
     print('Received {0} {1} from server.'.format(r.status_code, r.reason))
 
     if r.headers.get('X-Upgrade-Required'):
-        print('Response included notification about version ' + r.headers['X-Upgrade-Required'])
+        print('Response included notification about version ' + r.headers['X-Upgrade-Required'] + '; requesting upgrade information.')
+        upgrade_r = requests.get('http://localhost:8000/api/versions/0', headers=headers)
+        upgrade = upgrade_r.json()
+        perform_upgrade(upgrade['recommended']['download'], upgrade['recommended']['signature'])
 
 class ProjectEventHandler(FileSystemEventHandler):
     def on_any_event(self, event):
