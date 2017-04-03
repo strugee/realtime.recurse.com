@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from configparser import SafeConfigParser, NoSectionError
+import xdg
 import time
 import sched
 import subprocess
@@ -12,14 +14,24 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileModifiedEvent
 
 # 5 minutes
-#resubmitTime = 60 * 5
-resubmitTime = 5
+resubmitTime = 60 * 5
 version = '0.1.0'
 # TODO make this report the Python version
 userAgent = requests.utils.default_user_agent() + ' rcrealtime/' + version
 
 lastUrl = None
 lastWasPeriodic = False
+
+# Parse configs before we do anything else
+
+settings = SafeConfigParser()
+settings.read(path.join(xdg.XDG_CONFIG_HOME, 'rcrealtime.ini'))
+
+try:
+    settings.get('main', 'name')
+except NoSectionError:
+    print('I can\'t do anything without a name in the configuration.')
+    exit(1)
 
 def perform_upgrade(url, signature_url):
     print('Performing upgrade.')
