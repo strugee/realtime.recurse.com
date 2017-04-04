@@ -66,7 +66,7 @@ def submit_data(repo_url, action='edit'):
     })
 
     payload = { 'action': action, 'url': repo_url }
-    r = requests.post('http://localhost:8000/api/people/aj', headers=headers, json=payload)
+    r = requests.post('http://localhost:8000/api/people/' + settings['main']['name'], headers=headers, json=payload)
     print('Received {0} {1} from server.'.format(r.status_code, r.reason))
 
     if r.headers.get('X-Upgrade-Required'):
