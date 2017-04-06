@@ -112,33 +112,34 @@ class ProjectEventHandler(FileSystemEventHandler):
 
 print('realtime.recurse.com client starting up...')
 
-event_handler = ProjectEventHandler()
-observer = Observer()
-for i in [i for i in editingDirs if path.exists(i)]:
-    print('Registering filesystem watcher for {0}; this may take a while...'.format(i))
-    observer.schedule(event_handler, path=i, recursive=True)
-    print('Registered filesystem watcher for {0}.'.format(i))
-observer.start()
+if settings.getboolean('reporters', 'editing'):
+    event_handler = ProjectEventHandler()
+    observer = Observer()
+    for i in [i for i in editingDirs if path.exists(i)]:
+        print('Registering filesystem watcher for {0}; this may take a while...'.format(i))
+        observer.schedule(event_handler, path=i, recursive=True)
+        print('Registered filesystem watcher for {0}.'.format(i))
+    observer.start()
 
-print('Listening for filesystem events.')
+    print('Listening for filesystem events.')
 
-periodicSubmitter = sched.scheduler(time.time, time.sleep)
+    periodicSubmitter = sched.scheduler(time.time, time.sleep)
 
-def submit_periodic(sc):
-    global lastWasPeriodic
-    if lastUrl and not lastWasPeriodic:
-        print('Submitting a periodic update.')
-        lastWasPeriodic = True
-        submit_data(lastUrl, action='edit')
-    periodicSubmitter.enter(resubmitTime, 1, submit_periodic, (sc,))
+    def submit_periodic(sc):
+        global lastWasPeriodic
+        if lastUrl and not lastWasPeriodic:
+            print('Submitting a periodic update.')
+            lastWasPeriodic = True
+            submit_data(lastUrl, action='edit')
+            periodicSubmitter.enter(resubmitTime, 1, submit_periodic, (sc,))
 
-periodicSubmitter.enter(resubmitTime, 1, submit_periodic, (periodicSubmitter ,))
-periodicSubmitter.run()
+        periodicSubmitter.enter(resubmitTime, 1, submit_periodic, (periodicSubmitter ,))
+        periodicSubmitter.run()
 
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    observer.stop()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
 
-observer.join()
+    observer.join()
