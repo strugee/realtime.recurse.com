@@ -6,13 +6,13 @@ The client is written in Python.
 
 ## Features
 
-The client is currently very simple. If you touch a file in a git or Mercurial project, it'll automatically assume you're working on that project. In the future this will gain some smarter heuristics.
+The client is currently very simple. If you touch a file in a git or Mercurial project, it'll automatically assume you're working on that project. (In the future this will gain some smarter heuristics.) If the project is published publically, it will be reported to the server. **rcrealtime will _never_ disclose that you're working on projects that aren't already public.**
 
 It also contains an autoupdater.
 
 ## Automatic updates
 
-The client is able to update itself. Out of the box the autoupdater will only update to client releases that don't turn on new reporting by default. That means that whatever 
+The client is able to update itself. Out of the box the autoupdater will only update to client releases that don't turn on new reporting by default. That means that whatever you choose to report when you install the client will remain what you're reporting until you decide to change it - even if the client updates itself. In other words: **rcrealtime will _never_ report things without your consent.**
 
 Updates are cryptographically signed by AJ. The client verifies this signature before updating and will abort if it doesn't match.
 
@@ -48,4 +48,11 @@ editing = on
 
 # Comma-separated list of tilde-expanded directories to recursively watch for activity
 dirs = ~/Development, ~/dev, ~/Documents/GitHub, ~/code, ~/repos
+
+[updater]
+
+# See above for an explanation of updater modes
+mode = on
+# Whether to upgrade to betas
+prerelease = off
 ```

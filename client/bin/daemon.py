@@ -7,9 +7,11 @@ import sched
 import subprocess
 import tempfile
 import gnupg
-from os import path, chdir, getcwd
+from os import path, chdir, getcwd, rename
+from shutil import rmtree
 import requests
 import urllib
+import tarfile
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileModifiedEvent
 
@@ -32,9 +34,18 @@ if not ('main' in settings and 'name' in settings['main']):
     print('I can\'t do anything without a name in the configuration.')
     exit(1)
 
+# Load editing dirs
 editingDirs = map((lambda s: path.expanduser(s.strip())), settings['editing']['dirs'].split(','))
 
+# Accept the special value 'all' for updater mode
+if settings['updater']['mode'] is 'all':
+    acceptAllUpdates = True
+    settings['updater']['mode'] = 'on'
+
 def perform_upgrade(url, signature_url):
+    if not settings.getboolean('updater', 'mode'):
+        print('Not performing upgrade due to disabled updater.')
+
     print('Performing upgrade.')
     tmpdir = tempfile.TemporaryDirectory(prefix='rcrealtime')
     pkgfile = path.join(tmpdir.name, 'package.tar.xz')
@@ -54,10 +65,16 @@ def perform_upgrade(url, signature_url):
 
     if verification.trust_level is None:
         print('Aborted update due to mismatched signature.')
+        return
         # TODO notify user
 
     print('Downloaded and verified update bundle.')
-    # TODO unpack and stuff
+
+    tarfile.open(pkgfile).extractall(path=path.expanduser('~/.rcrealtime.new'))
+    # TODO: smoketest the new install
+    rename(path.expanduser('~/.rcrealtime'), path.expanduser('~/.rcrealtime.old'))
+    rename(path.expanduser('~/.rcrealtime.new'), path.expanduser('~/.rcrealtime'))
+
     print('Upgrade complete.')
 
 def submit_data(repo_url, action='edit'):
@@ -72,7 +89,7 @@ def submit_data(repo_url, action='edit'):
 
     if r.headers.get('X-Upgrade-Required'):
         print('Response included notification about version ' + r.headers['X-Upgrade-Required'] + '; requesting upgrade information.')
-        upgrade_r = requests.get('{0]/api/versions/0'.format(settings['main']['server']), headers=headers)
+        upgrade_r = requests.get('{0}/api/versions/0'.format(settings['main']['server']), headers=headers)
         upgrade = upgrade_r.json()
         perform_upgrade(upgrade['recommended']['download'], upgrade['recommended']['signature'])
 
@@ -111,6 +128,11 @@ class ProjectEventHandler(FileSystemEventHandler):
         submit_data(repo_url)
 
 print('realtime.recurse.com client starting up...')
+
+oldInstall = path.expanduser('~/.rcrealtime.old')
+if path.exists(oldInstall):
+    # If we can get this far, the upgrade seems okay, so nuke the old one
+    rmtree(oldInstall)
 
 if settings.getboolean('reporters', 'editing'):
     event_handler = ProjectEventHandler()
