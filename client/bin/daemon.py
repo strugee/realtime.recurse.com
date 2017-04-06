@@ -25,13 +25,14 @@ lastWasPeriodic = False
 # Parse configs before we do anything else
 
 settings = SafeConfigParser()
+settings.read(path.normpath(path.join(path.dirname(__file__), '..', 'lib', 'defaults.ini')))
 settings.read(path.join(xdg.XDG_CONFIG_HOME, 'rcrealtime.ini'))
 
-try:
-    settings.get('main', 'name')
-except NoSectionError:
+if not ('main' in settings and 'name' in settings['main']):
     print('I can\'t do anything without a name in the configuration.')
     exit(1)
+
+editingDirs = map((lambda s: path.expanduser(s.strip())), settings['editing']['dirs'].split(','))
 
 def perform_upgrade(url, signature_url):
     print('Performing upgrade.')
@@ -66,12 +67,12 @@ def submit_data(repo_url, action='edit'):
     })
 
     payload = { 'action': action, 'url': repo_url }
-    r = requests.post('http://localhost:8000/api/people/' + settings['main']['name'], headers=headers, json=payload)
+    r = requests.post('{0}/api/people/{1}'.format(settings['main']['server'], settings['main']['name']), headers=headers, json=payload)
     print('Received {0} {1} from server.'.format(r.status_code, r.reason))
 
     if r.headers.get('X-Upgrade-Required'):
         print('Response included notification about version ' + r.headers['X-Upgrade-Required'] + '; requesting upgrade information.')
-        upgrade_r = requests.get('http://localhost:8000/api/versions/0', headers=headers)
+        upgrade_r = requests.get('{0]/api/versions/0'.format(settings['main']['server']), headers=headers)
         upgrade = upgrade_r.json()
         perform_upgrade(upgrade['recommended']['download'], upgrade['recommended']['signature'])
 
@@ -113,7 +114,10 @@ print('realtime.recurse.com client starting up...')
 
 event_handler = ProjectEventHandler()
 observer = Observer()
-observer.schedule(event_handler, path='.', recursive=True)
+for i in [i for i in editingDirs if path.exists(i)]:
+    print('Registering filesystem watcher for {0}; this may take a while...'.format(i))
+    observer.schedule(event_handler, path=i, recursive=True)
+    print('Registered filesystem watcher for {0}.'.format(i))
 observer.start()
 
 print('Listening for filesystem events.')
