@@ -154,13 +154,14 @@ class ProjectEventHandler(FileSystemEventHandler):
         if repo_url[-4:] == '.git':
             repo_url = repo_url[:-4]
 
-        parsed = urllib.parse.urlparse(repo_url)
-        if parsed.netloc == 'github.com':
+        public_check = requests.get(repo_url)
+        status = public_check.status_code
+        if status < 300 and status >= 200:
             lastUrl = repo_url
             lastWasPeriodic = False
             submit_data(repo_url)
         else:
-            print('Ignoring non-GitHub project.')
+            print('Ignoring non-public project.')
 
 print('realtime.recurse.com client starting up...')
 
