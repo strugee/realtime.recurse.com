@@ -136,9 +136,25 @@ class ProjectEventHandler(FileSystemEventHandler):
                 return
         chdir(cwd)
 
-        lastUrl = repo_url
-        lastWasPeriodic = False
-        submit_data(repo_url)
+        # Try to normalize repo_url
+        # TODO look up what git URLs can actually be and expand this
+        if repo_url[:10] == 'git+ssh://':
+            repo_url = repo_url[10:]
+
+        if repo_url[:4] == 'git@':
+            repo_url = 'https://' + repo_url[4:]
+
+        if repo_url[:6] == 'git://':
+            repo_url = 'https://' + repo_url[6:]
+
+        if repo_url[4:] == '.git':
+            repo_url = repo_url[:4]
+
+        parsed = urllib.parse.urlparse(repo_url)
+        if parsed.netloc == 'github.com':
+            lastUrl = repo_url
+            lastWasPeriodic = False
+            submit_data(repo_url)
 
 print('realtime.recurse.com client starting up...')
 
