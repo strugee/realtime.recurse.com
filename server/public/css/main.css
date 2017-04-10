@@ -24,3 +24,14 @@ td, th {
 	border: 1px solid black;
 	padding: 5px;
 }
+
+footer {
+	text-align: center;
+	font-size: 75%;
+	margin: 30px;
+}
+
+#nodata {
+	text-align: center;
+	color: grey;
+}

@@ -7,9 +7,20 @@ head
 body
 	#greentop
 	h1 realtime.recurse.com
-	table
-		//-thead
-		each data, name in cache
-			tr
-				td= name
-				td= data.url
+	if dataAvailable
+		table
+			//-thead
+			each data, name in cache
+				tr
+					td= name
+					td
+						a(href=data.url)= data.url
+	else
+		#nodata No data to display. Perhaps you should 
+			a(href='https://github.com/strugee/realtime.recurse.com') install the client
+			|  and work on something?
+
+	footer
+		a(href='https://github.com/strugee/realtime.recurse.com') Install the client
+		|  | 
+		a(href='https://github.com/strugee/realtime.recurse.com') Source code

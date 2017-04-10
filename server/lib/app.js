@@ -71,7 +71,7 @@ app.get('/', function(req, res, next) {
 	cache.forEach((value, key) => {
 		objCache[key] = value;
 	});
-	res.render('index', {cache: objCache});
+	res.render('index', {cache: objCache, dataAvailable: cache.size !== 0});
 });
 
 app.get('/api/people', function(req, res, next) {
