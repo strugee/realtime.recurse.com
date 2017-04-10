@@ -7,7 +7,7 @@ import sched
 import subprocess
 import tempfile
 import gnupg
-from os import path, chdir, getcwd, rename
+from os import path, chdir, getcwd, rename, execlp
 from shutil import rmtree
 import sys
 import requests
@@ -84,11 +84,19 @@ def perform_upgrade(url, signature_url):
     print('Downloaded and verified update bundle.')
 
     tarfile.open(pkgfile).extractall(path=path.expanduser('~/.rcrealtime.new'))
-    # TODO: smoketest the new install
+
+    if subprocess.run(['python3', path.expanduser('~/.rcrealtime.new/bin/daemon.py'), '--boot-check']).returncode !== 0:
+        print('Newly-installed code does not start. Aborting upgrade.')
+        rmtree(path.expanduser('~/.rcrealtime.new'))
+        return
+
     rename(path.expanduser('~/.rcrealtime'), path.expanduser('~/.rcrealtime.old'))
     rename(path.expanduser('~/.rcrealtime.new'), path.expanduser('~/.rcrealtime'))
 
-    print('Upgrade complete.')
+    print('Upgrade complete; executing new process.')
+
+    sys.stdout.flush()
+    execlp('python3', path.expanduser('~/.rcrealtime/bin/daemon.py'))
 
 def submit_data(repo_url, action='edit'):
     headers = requests.utils.default_headers()
