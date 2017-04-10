@@ -9,6 +9,7 @@ import tempfile
 import gnupg
 from os import path, chdir, getcwd, rename
 from shutil import rmtree
+import sys
 import requests
 import urllib
 import tarfile
@@ -23,6 +24,11 @@ userAgent = requests.utils.default_user_agent() + ' rcrealtime/' + version
 
 lastUrl = None
 lastWasPeriodic = False
+
+# Internal install status check used by the updater
+
+if len(sys.argv) is 2 and sys.argv[1] == '--boot-check':
+    exit(0)
 
 # Parse configs before we do anything else
 
