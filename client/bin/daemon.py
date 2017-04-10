@@ -25,12 +25,19 @@ userAgent = requests.utils.default_user_agent() + ' rcrealtime/' + version
 lastUrl = None
 lastWasPeriodic = False
 
+# Clean up old installs
+
+oldInstall = path.expanduser('~/.rcrealtime.old')
+if path.exists(oldInstall):
+    # If we can get this far, the upgrade seems okay, so nuke the old one
+    rmtree(oldInstall)
+
 # Internal install status check used by the updater
 
 if len(sys.argv) is 2 and sys.argv[1] == '--boot-check':
     exit(0)
 
-# Parse configs before we do anything else
+# Parse configs before we do anything real
 
 settings = SafeConfigParser()
 settings.read(path.normpath(path.join(path.dirname(__file__), '..', 'lib', 'defaults.ini')))
@@ -134,11 +141,6 @@ class ProjectEventHandler(FileSystemEventHandler):
         submit_data(repo_url)
 
 print('realtime.recurse.com client starting up...')
-
-oldInstall = path.expanduser('~/.rcrealtime.old')
-if path.exists(oldInstall):
-    # If we can get this far, the upgrade seems okay, so nuke the old one
-    rmtree(oldInstall)
 
 if settings.getboolean('reporters', 'editing'):
     event_handler = ProjectEventHandler()
