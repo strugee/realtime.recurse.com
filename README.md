@@ -8,6 +8,15 @@ How does it work? People voluntarily run a small daemon on their computers. The 
 
 You can read more about the design of the system in the README.md files of the `client/` and `server/` directories.
 
+## Privacy
+
+Some important notes:
+
+1. The client will **never** disclose the project you're working on if that project is not public. This information won't even make it to the server.
+2. The client will **never** change its behavior to report more than what you said was okay when you installed.
+
+You're always in control of what you report.
+
 ## Author
 
 Alex Jordan <alex@strugee.net>
